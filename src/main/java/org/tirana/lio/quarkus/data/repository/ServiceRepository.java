@@ -1,33 +1,16 @@
 package org.tirana.lio.quarkus.data.repository;
 
-import java.util.List;
-
 import org.tirana.lio.quarkus.data.entity.Service;
 
+import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
-import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
 
 @ApplicationScoped
-public class ServiceRepository {
-
-	private final EntityManager em;
-
-	public ServiceRepository(EntityManager em) {
-		this.em = em;
-	}
+public class ServiceRepository implements PanacheRepository<Service> {
 
 	@Transactional
-	public void saveService(Service service) {
-		if (service.getId() == null) {
-			em.persist(service);
-		} else {
-			em.merge(service);
-		}
+	public void save(Service service) {
+		persist(service);
 	}
-
-	public List<Service> getAllServices() {
-		return em.createQuery("select service from Service service", Service.class).getResultList();
-	}
-
 }
