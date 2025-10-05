@@ -1,83 +1,68 @@
 package org.tirana.lio.quarkus.web.rest;
 
-import java.util.Arrays;
 import java.util.List;
 
 import org.jboss.resteasy.reactive.ResponseStatus;
+import org.jboss.resteasy.reactive.RestPath;
 import org.jboss.resteasy.reactive.RestQuery;
 import org.tirana.lio.quarkus.data.entity.Customer;
-import org.tirana.lio.quarkus.data.repository.CustomerRepository;
+import org.tirana.lio.quarkus.service.CustomerService;
 
 import io.quarkus.runtime.util.StringUtil;
-import jakarta.ws.rs.BadRequestException;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.DELETE;
 import jakarta.ws.rs.GET;
-import jakarta.ws.rs.NotFoundException;
 import jakarta.ws.rs.POST;
 import jakarta.ws.rs.PUT;
 import jakarta.ws.rs.Path;
-import jakarta.ws.rs.PathParam;
 import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.WebApplicationException;
 
 @Path("/rest/customers")
 @Produces("application/json")
 @Consumes("application/json")
 public class CustomerRest {
+	private final CustomerService customerService;
 
-	private final CustomerRepository customerRepository;
-
-	public CustomerRest(CustomerRepository customerRepository) {
-		this.customerRepository = customerRepository;
+	public CustomerRest(CustomerService customerService) {
+		this.customerService = customerService;
 	}
 
 	@GET
 	public List<Customer> getCustomers(@RestQuery("email") String email) {
 		if (StringUtil.isNullOrEmpty(email)) {
-			return customerRepository.listAll();
+			return this.customerService.getAllCustomers();
+		} else {
+			return this.customerService.getCustomersByEmail(email);
 		}
-		return Arrays.asList(customerRepository.findByEmail(email));
 	}
 
 	@POST
 	@ResponseStatus(201)
 	public Customer addCustomer(Customer customer) {
-		customerRepository.save(customer);
-		return customer;
+		return customerService.addCustomer(customer);
 	}
 
-	@GET
 	@Path("/{id}")
-	public Customer getCustomer(@PathParam("id") Long id) {
-		Customer customer = customerRepository.findById(id);
-		if (customer == null) {
-			throw new NotFoundException();
-		}
-		return customer;
+	@GET
+	public Customer getCustomer(@RestPath("id") long id) {
+		return customerService.getCustomer(id);
 	}
 
+	@Path("/{id}")
 	@PUT
 	@ResponseStatus(204)
-	@Path("/{id}")
-	public void updateCustomer(@PathParam("id") Long id, Customer customer) {
-		Customer entity = customerRepository.findById(id);
-		if (entity == null) {
-			throw new NotFoundException();
+	public void updateCustomer(@RestPath("id") long id, Customer customer) {
+		if (id != customer.getId()) {
+			throw new WebApplicationException(400);
 		}
-		if (id != entity.getId()) {
-			throw new BadRequestException();
-		}
-		customerRepository.save(customer);
+		customerService.updateCustomer(customer);
 	}
 
+	@Path("/{id}")
 	@DELETE
 	@ResponseStatus(205)
-	@Path("/{id}")
-	public void deleteCustomer(@PathParam("id") Long id) {
-		Customer entity = customerRepository.findById(id);
-		if (entity == null) {
-			throw new NotFoundException();
-		}
-		customerRepository.delete(id);
+	public void deleteCustomer(@RestPath("id") long id) {
+		customerService.deleteCustomer(id);
 	}
 }

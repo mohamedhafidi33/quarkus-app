@@ -21,4 +21,9 @@ public class VendorRepository implements PanacheRepository<Vendor>{
 	public Vendor findByName(String name) {
 		return find("lowaer(name)", name.toLowerCase()).firstResult();
 	}
+
+	public Vendor findByEmailAndName(String email, String name) {
+		// TODO Auto-generated method stub
+		return null;
+	}
 }
