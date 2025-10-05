@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    container_name: quarkus_postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - quarkus-net
+
+  quarkus-app:
+    build:
+      context: .
+      dockerfile: ./src/main/docker/Dockerfile.jvm
+    container_name: quarkus_app
+    depends_on:
+      - db
+    environment:
+      QUARKUS_DATASOURCE_JDBC_URL: ${QUARKUS_DATASOURCE_JDBC_URL}
+      QUARKUS_DATASOURCE_USERNAME: ${QUARKUS_DATASOURCE_USERNAME}
+      QUARKUS_DATASOURCE_PASSWORD: ${QUARKUS_DATASOURCE_PASSWORD}
+    ports:
+      - "8080:8080"
+    networks:
+      - quarkus-net
+
+volumes:
+  pgdata:
+
+networks:
+  quarkus-net:
+    driver: bridge
